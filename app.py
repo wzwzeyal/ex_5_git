@@ -18,44 +18,57 @@ server = app.server
 # App layout
 app.layout = html.Div([
 
-    # Headine
-    dbc.Row(
-        [
-            dbc.Col(html.H1("Exercise 5 RNN", style={'text-align': 'center'}),)
-        ]
-    ),
+    dbc.Col(html.H1("Exercise 5 RNN", style={'text-align': 'left'}),),
 
-    # Button + Name 
-    dbc.Row(
-        [
-            dbc.Col(dbc.Button("Generate Random Name", id='button', n_clicks=0, size='lg', style={'text-align': 'left'}),),
-            dbc.Col(html.H4(id='model_input', children=[], style={'text-align': 'left'}),),
-        ],
-        justify="start"
-    ),
-
-    html.Br(),
-
-    # Country
-    dbc.Row(
-        [
-            dbc.Col(html.H2(id='model_output', children=[], style={'text-align': 'center'}),),
-        ]
-
-    ),
-
-    # Radio Buttons
-    dbc.Row(
-        [
-            dbc.Col(    dcc.RadioItems(
+    dbc.Col(dbc.Button("Generate Random Name", id='button', n_clicks=0, size='lg', style={'text-align': 'left'}),),
+    dbc.Col(html.H4(id='model_input', children=[], style={'text-align': 'left'}),),
+    dbc.Col(html.H2(id='model_output', children=[], style={'text-align': 'left'}),),
+    dbc.Col(    dcc.RadioItems(
                 id='select_metric',
                 options=[
-                    {'label': 'Softmax', 'value': 'SMAX'},
-                    {'label': 'Raw', 'value': 'RAW'},
+                    {'label': 'Softmax', 'value': 'Softmax'},
+                    {'label': 'Raw', 'value': 'Raw'},
                 ],
-                value='SMAX'),),
-        ]
-    ),
+                value='Softmax'),),
+
+    # # Headine
+    # dbc.Row(
+    #     [
+    #         dbc.Col(html.H1("Exercise 5 RNN", style={'text-align': 'center'}),),
+    #     ]
+    # ),
+
+    # # Button + Name 
+    # dbc.Row(
+    #     [
+    #         dbc.Col(dbc.Button("Generate Random Name", id='button', n_clicks=0, size='lg', style={'text-align': 'left'}),),
+    #         dbc.Col(html.H4(id='model_input', children=[], style={'text-align': 'left'}),),
+    #     ],
+    #     justify="start"
+    # ),
+
+    # html.Br(),
+
+    # # Country
+    # dbc.Row(
+    #     [
+    #         dbc.Col(html.H2(id='model_output', children=[], style={'text-align': 'center'}),),
+    #     ]
+
+    # ),
+
+    # # Radio Buttons
+    # dbc.Row(
+    #     [
+    #         dbc.Col(    dcc.RadioItems(
+    #             id='select_metric',
+    #             options=[
+    #                 {'label': 'Softmax', 'value': 'SMAX'},
+    #                 {'label': 'Raw', 'value': 'RAW'},
+    #             ],
+    #             value='SMAX'),),
+    #     ]
+    # ),
 
     dbc.Row(
         [
@@ -104,22 +117,27 @@ def on_button_press(n_clicks, select_metric, stored_sofmax, stored_raw):
     trigger = callback_context.triggered[0]
 
     if trigger['prop_id']=='select_metric.value':
-        if trigger['value']=='SMAX':
+        if trigger['value']=='Softmax':
             vX = stored_sofmax
         else:
             vX = stored_raw
         vSortedPredictions = sorted(vX)
         vSortedCOls        = sorted(zip(vX, lCategories))
         vY = [col for _,col in vSortedCOls]
-        fig = px.bar(x=vSortedPredictions, y=vY, orientation='h',)
-
+        fig = px.bar(x=vSortedPredictions[-5:], y=vY[-5:], orientation='h',)
+        fig.update_layout(
+            xaxis_title=select_metric,
+            yaxis_title="Top 5 Categories",
+            font=dict(
+                size=24,
+                color="RebeccaPurple"))
         return no_update, no_update, fig, no_update, no_update
 
     elif trigger['prop_id']=='button.n_clicks':
         random_name         = choice(lNames)
         label, vSoftmax, vRaw  = predict_country(oModel, random_name, oVocab, lCategories)
 
-        if select_metric=='SMAX':
+        if select_metric=='Softmax':
             vX = vSoftmax
         else:
             vX = vRaw
@@ -128,7 +146,14 @@ def on_button_press(n_clicks, select_metric, stored_sofmax, stored_raw):
         vSortedCOls        = sorted(zip(vX, lCategories))
         vY = [col for _,col in vSortedCOls]
 
-        fig = px.bar(x=vSortedPredictions, y=vY, orientation='h',)
+        fig = px.bar(x=vSortedPredictions[-5:], y=vY[-5:], orientation='h',)
+        fig.update_layout(
+            xaxis_title=select_metric,
+            yaxis_title="Top 5 Categories",
+            font=dict(
+                size=24,
+                color="RebeccaPurple")
+    )
 
         return random_name, label, fig, vSoftmax, vRaw
     else:
